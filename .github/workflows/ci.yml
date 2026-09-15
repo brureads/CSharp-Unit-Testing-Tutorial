@@ -1,0 +1,40 @@
+name: CI - Build, Testes e Cobertura
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restaurar dependências
+        run: dotnet restore src/UnitTestingTutorial.slnx
+
+      - name: Compilar projeto
+        run: dotnet build src/UnitTestingTutorial.slnx --no-restore
+
+      - name: Executar testes e gerar cobertura
+        env:
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+        run: dotnet test src/UnitTestingTutorial.slnx --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Salvar relatório de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-cobertura-xml
+          path: TestResults/**/coverage.cobertura.xml
